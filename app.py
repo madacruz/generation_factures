@@ -93,12 +93,12 @@ def generer_facture(row, template_path, numero_facture, date_facture):
         convert(docx_path, pdf_path)
     except Exception:
         try :
-            st.warning(f"Tentative avec libreoffice pour la facture {numero_facture}...")
+            #st.warning(f"Tentative avec libreoffice pour la facture {numero_facture}...")
             pdf_dir = "factures_pdf"
             os.makedirs(pdf_dir, exist_ok=True)
             pdf_path = convert_to_pdf_with_libreoffice(docx_path, pdf_dir)
         except Exception as e:
-            st.write(e)
+            #st.write(e)
             pdf_path = None  # Ne pas interrompre le processus
     return docx_path, pdf_path
 
