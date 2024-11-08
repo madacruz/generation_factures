@@ -62,7 +62,7 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     pdf_filename = safe_filename(pdf_filename)  # Nettoyer le nom de fichier
     pdf_path = os.path.join("factures_pdf", pdf_filename)
     try:
-    convert(docx_path, pdf_path)
+        convert(docx_path, pdf_path)
     except Exception as e:
         st.warning(f"docx2pdf a échoué : {e}")
         try:
