@@ -137,36 +137,36 @@ with col2:
         df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
         df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
 
-    if st.button("Générer les factures"):
-        pdf_files = []
-        docx_files = []
-
-        progress = st.progress(0)  # Initialisation de la barre de progression
-        total_rows = len(df)
+        if st.button("Générer les factures"):
+            pdf_files = []
+            docx_files = []
     
-        for i, row in enumerate(df.iterrows(), 1):
-            numero_facture = indice_depart + i
-            docx_path, pdf_path = generer_facture(row[1], 'Modèle facture cotisations.docx', numero_facture, date_facture)
-            docx_files.append(docx_path)
-            if pdf_path:
-                pdf_files.append(pdf_path)
-
-            progress.progress(i / total_rows)
+            progress = st.progress(0)  # Initialisation de la barre de progression
+            total_rows = len(df)
         
-        st.success(f"Factures générées avec succès ! DOCX : {len(docx_files)}, PDF : {len(pdf_files)}.")
-        
-        zip_buffer = BytesIO()
-        with st.spinner("Compression des fichiers..."):
-            with zipfile.ZipFile(zip_buffer, "w") as zf:
-                for file in docx_files + pdf_files:
-                    zf.write(file, os.path.basename(file))
-        
-        st.download_button(
-            label="Télécharger toutes les factures",
-            data=zip_buffer.getvalue(),
-            file_name="factures.zip",
-            mime="application/zip"
-        )
+            for i, row in enumerate(df.iterrows(), 1):
+                numero_facture = indice_depart + i
+                docx_path, pdf_path = generer_facture(row[1], 'Modèle facture cotisations.docx', numero_facture, date_facture)
+                docx_files.append(docx_path)
+                if pdf_path:
+                    pdf_files.append(pdf_path)
+    
+                progress.progress(i / total_rows)
+            
+            st.success(f"Factures générées avec succès ! DOCX : {len(docx_files)}, PDF : {len(pdf_files)}.")
+            
+            zip_buffer = BytesIO()
+            with st.spinner("Compression des fichiers..."):
+                with zipfile.ZipFile(zip_buffer, "w") as zf:
+                    for file in docx_files + pdf_files:
+                        zf.write(file, os.path.basename(file))
+            
+            st.download_button(
+                label="Télécharger toutes les factures",
+                data=zip_buffer.getvalue(),
+                file_name="factures.zip",
+                mime="application/zip"
+            )
 
 if uploaded_file:
     col1, col2 = st.columns(2)
