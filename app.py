@@ -11,8 +11,15 @@ import pypandoc
 import zipfile
 import subprocess
 
-# Téléchargement de pandoc si nécessaire
-pypandoc.download_pandoc()
+import shutil
+import streamlit as st
+
+# Vérifiez si pandoc est disponible
+if not shutil.which("pandoc"):
+    st.error("Pandoc n'est pas installé dans l'environnement. Ajoutez-le à `packages.txt`.")
+else:
+    st.success("Pandoc est disponible.")
+
 
 # Configuration de la page Streamlit
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
