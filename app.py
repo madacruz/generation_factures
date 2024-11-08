@@ -18,13 +18,10 @@ import streamlit as st
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
 
 # Vérifiez si pandoc est disponible
-if not shutil.which("pandoc"):
-    st.error("Pandoc n'est pas installé dans l'environnement. Ajoutez-le à `packages.txt`.")
-else:
-    st.success("Pandoc est disponible.")
-
-
-
+#if not shutil.which("pandoc"):
+#    st.error("Pandoc n'est pas installé dans l'environnement. Ajoutez-le à `packages.txt`.")
+#else:
+#    st.success("Pandoc est disponible.")
 
 os.makedirs("factures_docx", exist_ok=True)
 os.makedirs("factures_pdf", exist_ok=True)
@@ -95,20 +92,14 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     try:
         convert(docx_path, pdf_path)
     except Exception:
-        try:
-            st.warning(f"Tentative avec pypandoc pour la facture {numero_facture}...")
-            doc2pdf_pandoc(docx_path, pdf_path)
+        try :
+            st.warning(f"Tentative avec libreoffice pour la facture {numero_facture}...")
+            pdf_dir = "factures_pdf"
+            os.makedirs(pdf_dir, exist_ok=True)
+            pdf_path = convert_to_pdf_with_libreoffice(docx_path, pdf_dir)
         except Exception as e:
-            st.error(f"Échec de la conversion en PDF pour la facture {numero_facture} : {e}")
-            try :
-                st.warning(f"Tentative avec libreoffice pour la facture {numero_facture}...")
-                pdf_dir = "factures_pdf"
-                os.makedirs(pdf_dir, exist_ok=True)
-                pdf_path = convert_to_pdf_with_libreoffice(docx_path, pdf_dir)
-            except Exception as e:
-                st.write(e)
-                pdf_path = None  # Ne pas interrompre le processus
-
+            st.write(e)
+            pdf_path = None  # Ne pas interrompre le processus
     return docx_path, pdf_path
 
 def doc2pdf_pandoc(docx_path, pdf_path):
