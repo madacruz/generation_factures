@@ -10,6 +10,8 @@ from docx.shared import Pt
 import zipfile
 import subprocess
 
+# https://github.com/Franky1/Streamlit-docx-converter
+
 # Configuration de la page Streamlit
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
 
