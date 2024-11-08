@@ -7,8 +7,9 @@ import re
 from io import BytesIO
 from datetime import datetime
 from docx.shared import Pt
-import subprocess
 import pypandoc
+
+pypandoc.download_pandoc()
 
 # Configuration de la page Streamlit
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
@@ -64,17 +65,11 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     try:
         convert(docx_path, pdf_path)
     except Exception as e:
-        st.warning(f"docx2pdf a échoué : {e}")
-        try:
-            st.write('Tentative avec abiword...')
-            doc2pdf_abiword(docx_path)
-        except Exception as e:
-            st.warning(f"Abiword a échoué : {e}")
+        #st.warning(f"docx2pdf a échoué : {e}")
             try:
                 st.write('Tentative avec pypandoc...')
                 doc2pdf_pandoc(docx_path, pdf_path)
             except Exception as e:
-                st.error(f"Échec avec pypandoc également : {e}")
                 return None
     return pdf_path
 
