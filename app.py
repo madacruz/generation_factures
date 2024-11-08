@@ -91,7 +91,7 @@ def capitalize_name(name):
     return capitalized_name
 
 # Interface utilisateur
-st.title("Générateur de Factures")
+st.title("Générateur de Factures Grands Formats")
 
 uploaded_file = st.file_uploader("Téléchargez votre fichier CSV", type="csv")
 indice_depart = st.number_input("Indice de départ pour les factures", min_value=0, value=1, step=1)
