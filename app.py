@@ -143,14 +143,14 @@ with col2:
     
             progress = st.progress(0)  # Initialisation de la barre de progression
             total_rows = len(df)
-        
+            
             for i, row in enumerate(df.iterrows(), 1):
                 numero_facture = indice_depart + i
                 docx_path, pdf_path = generer_facture(row[1], 'Modèle facture cotisations.docx', numero_facture, date_facture)
                 docx_files.append(docx_path)
                 if pdf_path:
                     pdf_files.append(pdf_path)
-    
+                
                 progress.progress(i / total_rows)
             
             st.success(f"Factures générées avec succès ! DOCX : {len(docx_files)}, PDF : {len(pdf_files)}.")
