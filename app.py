@@ -7,22 +7,13 @@ import re
 from io import BytesIO
 from datetime import datetime
 from docx.shared import Pt
-import pypandoc
 import zipfile
 import subprocess
-
-import shutil
-import streamlit as st
 
 # Configuration de la page Streamlit
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
 
-# Vérifiez si pandoc est disponible
-#if not shutil.which("pandoc"):
-#    st.error("Pandoc n'est pas installé dans l'environnement. Ajoutez-le à `packages.txt`.")
-#else:
-#    st.success("Pandoc est disponible.")
-
+# Création des dossiers pour les fichiers
 os.makedirs("factures_docx", exist_ok=True)
 os.makedirs("factures_pdf", exist_ok=True)
 
@@ -39,9 +30,6 @@ def safe_filename(filename):
     return re.sub(r'[<>:"/\\\\|?*]', '-', filename)
 
 def convert_to_pdf_with_libreoffice(docx_path, pdf_dir):
-    """
-    Convert DOCX to PDF using LibreOffice in headless mode.
-    """
     try:
         subprocess.run(
             [
@@ -92,18 +80,13 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     try:
         convert(docx_path, pdf_path)
     except Exception:
-        try :
-            #st.warning(f"Tentative avec libreoffice pour la facture {numero_facture}...")
+        try:
             pdf_dir = "factures_pdf"
             os.makedirs(pdf_dir, exist_ok=True)
             pdf_path = convert_to_pdf_with_libreoffice(docx_path, pdf_dir)
         except Exception as e:
-            #st.write(e)
-            pdf_path = None  # Ne pas interrompre le processus
+            pdf_path = None  # Ne pas interrompre le processus si la conversion échoue
     return docx_path, pdf_path
-
-def doc2pdf_pandoc(docx_path, pdf_path):
-    pypandoc.convert_file(docx_path, 'pdf', outputfile=pdf_path)
 
 def capitalize_name(name):
     parts = [part.capitalize() for part in name.split(' ')]
@@ -115,28 +98,27 @@ st.title("Générateur de Factures Grands Formats")
 col1, col2 = st.columns(2)
 
 with col1:
-    
     uploaded_file = st.file_uploader("Téléchargez votre fichier CSV", type="csv")
     indice_depart = st.number_input("Indice de départ pour les factures", min_value=0, value=1, step=1)
     date_facture = st.date_input("Date de la facture", value=datetime.today())
 
-with col2:
-    if uploaded_file:
-        df_original = pd.read_csv(uploaded_file)
-        
-        df = df_original.rename({
-            "Nom de la structure juridique": "STRUCTURE",
-            "Nom du ou des ensemble(s) et/ou collectif membre(s) de Grands Formats": "ENSEMBLE",
-            "Nom du référent": "NOM",
-            "Prénom du référent": "PRENOM",
-            "Le montant de ma cotisation est de :\nPour un budget :\n- inférieur à 10 000 euros : 75 euros\n- compris entre 10 000 et 85 000 euros : 150 euros\n- compris entre 85 000 et 150 000 euros : 250 euros\n- supérieur à 150 000 euros : 350 euros)": "TARIF"
-        }, axis=1)
-        
-        df = df[["STRUCTURE", "ENSEMBLE", "NOM", "PRENOM", "TARIF"]]
-        df['NOM'] = df['NOM'].apply(capitalize_name)
-        df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
-        df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
+if uploaded_file:
+    df_original = pd.read_csv(uploaded_file)
+    
+    df = df_original.rename({
+        "Nom de la structure juridique": "STRUCTURE",
+        "Nom du ou des ensemble(s) et/ou collectif membre(s) de Grands Formats": "ENSEMBLE",
+        "Nom du référent": "NOM",
+        "Prénom du référent": "PRENOM",
+        "Le montant de ma cotisation est de :\nPour un budget :\n- inférieur à 10 000 euros : 75 euros\n- compris entre 10 000 et 85 000 euros : 150 euros\n- compris entre 85 000 et 150 000 euros : 250 euros\n- supérieur à 150 000 euros : 350 euros)": "TARIF"
+    }, axis=1)
+    
+    df = df[["STRUCTURE", "ENSEMBLE", "NOM", "PRENOM", "TARIF"]]
+    df['NOM'] = df['NOM'].apply(capitalize_name)
+    df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
+    df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
 
+    with col2:
         if st.button("Générer les factures"):
             pdf_files = []
             docx_files = []
@@ -159,7 +141,7 @@ with col2:
             with st.spinner("Compression des fichiers..."):
                 with zipfile.ZipFile(zip_buffer, "w") as zf:
                     for file in docx_files + pdf_files:
-                        zf.write(file, os.path.basename(file))
+                        zf.write(file, os.path.relpath(file))
             
             st.download_button(
                 label="Télécharger toutes les factures",
@@ -168,15 +150,10 @@ with col2:
                 mime="application/zip"
             )
 
-if uploaded_file:
     col1, col2 = st.columns(2)
-        
     with col1:
         st.subheader("Aperçu avant modifications")
         st.write(df_original.head(50))
-    
     with col2:
         st.subheader("Aperçu après modifications")
         st.write(df.head(50))
-    
-    
