@@ -7,6 +7,8 @@ import re
 from io import BytesIO
 from datetime import datetime
 from docx.shared import Pt
+import subprocess
+import pypandoc
 
 # Configuration de la page Streamlit
 st.set_page_config(page_title="Générateur de Factures Grands Formats", layout="wide")
@@ -59,9 +61,29 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     pdf_filename = f"2024-ADHF{numero_facture} - {row['ENSEMBLE']} cotisation annuelle.pdf"
     pdf_filename = safe_filename(pdf_filename)  # Nettoyer le nom de fichier
     pdf_path = os.path.join("factures_pdf", pdf_filename)
+    try:
     convert(docx_path, pdf_path)
-
+    except Exception as e:
+        st.warning(f"docx2pdf a échoué : {e}")
+        try:
+            st.write('Tentative avec abiword...')
+            doc2pdf_abiword(docx_path)
+        except Exception as e:
+            st.warning(f"Abiword a échoué : {e}")
+            try:
+                st.write('Tentative avec pypandoc...')
+                doc2pdf_pandoc(docx_path, pdf_path)
+            except Exception as e:
+                st.error(f"Échec avec pypandoc également : {e}")
+                return None
     return pdf_path
+
+def doc2pdf_abiword(docx_path):
+    cmd = ['abiword', '--to=pdf', docx_path]
+    subprocess.run(cmd, check=True)
+
+def doc2pdf_pandoc(docx_path, pdf_path):
+    pypandoc.convert_file(docx_path, 'pdf', outputfile=pdf_path)
 
 def capitalize_name(name):
     parts = [part.capitalize() for part in name.split(' ')]
