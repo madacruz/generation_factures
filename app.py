@@ -67,9 +67,10 @@ def generer_facture(row, template_path, numero_facture, date_facture):
     except Exception as e:
         #st.warning(f"docx2pdf a échoué : {e}")
             try:
-                st.write('Tentative avec pypandoc...')
+                #st.write('Tentative avec pypandoc...')
                 doc2pdf_pandoc(docx_path, pdf_path)
             except Exception as e:
+                st.write(e)
                 return None
     return pdf_path
 
