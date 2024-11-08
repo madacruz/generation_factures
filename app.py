@@ -112,28 +112,33 @@ def capitalize_name(name):
 
 st.title("Générateur de Factures Grands Formats")
 
-uploaded_file = st.file_uploader("Téléchargez votre fichier CSV", type="csv")
-indice_depart = st.number_input("Indice de départ pour les factures", min_value=0, value=1, step=1)
-date_facture = st.date_input("Date de la facture", value=datetime.today())
+col1, col2 = st.columns(2)
+
+with col1:
+    
+    uploaded_file = st.file_uploader("Téléchargez votre fichier CSV", type="csv")
+    indice_depart = st.number_input("Indice de départ pour les factures", min_value=0, value=1, step=1)
+    date_facture = st.date_input("Date de la facture", value=datetime.today())
+    
+    if uploaded_file:
+        df_original = pd.read_csv(uploaded_file)
+        
+        df = df_original.rename({
+            "Nom de la structure juridique": "STRUCTURE",
+            "Nom du ou des ensemble(s) et/ou collectif membre(s) de Grands Formats": "ENSEMBLE",
+            "Nom du référent": "NOM",
+            "Prénom du référent": "PRENOM",
+            "Le montant de ma cotisation est de :\nPour un budget :\n- inférieur à 10 000 euros : 75 euros\n- compris entre 10 000 et 85 000 euros : 150 euros\n- compris entre 85 000 et 150 000 euros : 250 euros\n- supérieur à 150 000 euros : 350 euros)": "TARIF"
+        }, axis=1)
+        
+        df = df[["STRUCTURE", "ENSEMBLE", "NOM", "PRENOM", "TARIF"]]
+        df['NOM'] = df['NOM'].apply(capitalize_name)
+        df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
+        df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
 
 if uploaded_file:
-    df_original = pd.read_csv(uploaded_file)
-    
-    df = df_original.rename({
-        "Nom de la structure juridique": "STRUCTURE",
-        "Nom du ou des ensemble(s) et/ou collectif membre(s) de Grands Formats": "ENSEMBLE",
-        "Nom du référent": "NOM",
-        "Prénom du référent": "PRENOM",
-        "Le montant de ma cotisation est de :\nPour un budget :\n- inférieur à 10 000 euros : 75 euros\n- compris entre 10 000 et 85 000 euros : 150 euros\n- compris entre 85 000 et 150 000 euros : 250 euros\n- supérieur à 150 000 euros : 350 euros)": "TARIF"
-    }, axis=1)
-    
-    df = df[["STRUCTURE", "ENSEMBLE", "NOM", "PRENOM", "TARIF"]]
-    df['NOM'] = df['NOM'].apply(capitalize_name)
-    df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
-    df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
-
     col1, col2 = st.columns(2)
-    
+        
     with col1:
         st.subheader("Aperçu avant modifications")
         st.write(df_original.head(50))
@@ -141,11 +146,11 @@ if uploaded_file:
     with col2:
         st.subheader("Aperçu après modifications")
         st.write(df.head(50))
-
+    
     if st.button("Générer les factures"):
         pdf_files = []
         docx_files = []
-
+    
         for i, row in df.iterrows():
             numero_facture = indice_depart + i
             docx_path, pdf_path = generer_facture(row, 'Modèle facture cotisations.docx', numero_facture, date_facture)
