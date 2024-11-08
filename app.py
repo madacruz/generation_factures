@@ -9,6 +9,7 @@ from datetime import datetime
 from docx.shared import Pt
 import pypandoc
 import zipfile
+import subprocess
 
 # Téléchargement de pandoc si nécessaire
 pypandoc.download_pandoc()
@@ -30,6 +31,27 @@ def replace_text_in_paragraph(paragraph, replacements):
 
 def safe_filename(filename):
     return re.sub(r'[<>:"/\\\\|?*]', '-', filename)
+
+def convert_to_pdf_with_libreoffice(docx_path, pdf_dir):
+    """
+    Convert DOCX to PDF using LibreOffice in headless mode.
+    """
+    try:
+        subprocess.run(
+            [
+                "soffice",
+                "--headless",
+                "--convert-to", "pdf:writer_pdf_Export",
+                "--outdir", pdf_dir,
+                docx_path
+            ],
+            check=True
+        )
+        pdf_filename = os.path.splitext(os.path.basename(docx_path))[0] + ".pdf"
+        return os.path.join(pdf_dir, pdf_filename)
+    except subprocess.CalledProcessError as e:
+        st.error(f"Erreur lors de la conversion avec LibreOffice : {e}")
+        return None
 
 def generer_facture(row, template_path, numero_facture, date_facture):
     doc = Document(template_path)
@@ -69,7 +91,11 @@ def generer_facture(row, template_path, numero_facture, date_facture):
             doc2pdf_pandoc(docx_path, pdf_path)
         except Exception as e:
             st.error(f"Échec de la conversion en PDF pour la facture {numero_facture} : {e}")
-            pdf_path = None  # Ne pas interrompre le processus
+            try :
+                convert_to_pdf_with_libreoffice(docx_path, pdf_dir)
+                except Exception as e:
+                    st.write(e)
+                    pdf_path = None  # Ne pas interrompre le processus
 
     return docx_path, pdf_path
 
