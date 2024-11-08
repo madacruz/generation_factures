@@ -137,17 +137,6 @@ with col2:
         df['PRENOM'] = df['PRENOM'].apply(capitalize_name)
         df['TARIF'] = df['TARIF'].apply(lambda x: int(re.search(r'\d+', str(x)).group()) if pd.notnull(x) else 0)
 
-if uploaded_file:
-    col1, col2 = st.columns(2)
-        
-    with col1:
-        st.subheader("Aperçu avant modifications")
-        st.write(df_original.head(50))
-    
-    with col2:
-        st.subheader("Aperçu après modifications")
-        st.write(df.head(50))
-    
     if st.button("Générer les factures"):
         pdf_files = []
         docx_files = []
@@ -178,3 +167,16 @@ if uploaded_file:
             file_name="factures.zip",
             mime="application/zip"
         )
+
+if uploaded_file:
+    col1, col2 = st.columns(2)
+        
+    with col1:
+        st.subheader("Aperçu avant modifications")
+        st.write(df_original.head(50))
+    
+    with col2:
+        st.subheader("Aperçu après modifications")
+        st.write(df.head(50))
+    
+    
