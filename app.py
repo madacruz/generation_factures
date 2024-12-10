@@ -101,7 +101,7 @@ col1, col2 = st.columns(2)
 
 with col1:
     uploaded_file = st.file_uploader("Téléchargez votre fichier CSV", type="csv")
-    indice_depart = st.number_input("Indice de départ pour les factures", min_value=0, value=1, step=1)
+    indice_depart = st.number_input("Indice de départ pour les factures", min_value=1, value=1, step=1)
     date_facture = st.date_input("Date de la facture", value=datetime.today())
 
 if uploaded_file:
@@ -128,7 +128,7 @@ if uploaded_file:
             progress = st.progress(0)  # Initialisation de la barre de progression
             total_rows = len(df)
             
-            for i, row in enumerate(df.iterrows(), 1):
+            for i, row in enumerate(df.iterrows(), 0):
                 numero_facture = indice_depart + i
                 docx_path, pdf_path = generer_facture(row[1], 'Modèle facture cotisations.docx', numero_facture, date_facture)
                 docx_files.append(docx_path)
